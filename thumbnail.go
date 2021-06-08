@@ -1,5 +1,6 @@
 /*
 Copyright (c) 2012, Jan Schlicht <jan.schlicht@gmail.com>
+Copyright (c) 2021 A Bunch Tell LLC
 
 Permission to use, copy, modify, and/or distribute this software for any purpose
 with or without fee is hereby granted, provided that the above copyright notice
@@ -51,5 +52,31 @@ func Thumbnail(maxWidth, maxHeight uint, img image.Image, interp InterpolationFu
 		}
 		newHeight = maxHeight
 	}
+	return Resize(newWidth, newHeight, img, interp)
+}
+
+// Width downscales the given image.Image to the given width, preserving the image aspect ratio and using the given
+// InterpolationFunction. It returns the resized image, unless the image was smaller than the max width -- in which
+// case, the original image is returned.
+func Width(maxWidth uint, img image.Image, interp InterpolationFunction) image.Image {
+	origBounds := img.Bounds()
+	origWidth := uint(origBounds.Dx())
+	origHeight := uint(origBounds.Dy())
+	newWidth, newHeight := origWidth, origHeight
+
+	// Return original image if it have same or smaller size as constraints
+	if maxWidth >= origWidth {
+		return img
+	}
+
+	// Preserve aspect ratio
+	if origWidth > maxWidth {
+		newHeight = uint(origHeight * maxWidth / origWidth)
+		if newHeight < 1 {
+			newHeight = 1
+		}
+		newWidth = maxWidth
+	}
+
 	return Resize(newWidth, newHeight, img, interp)
 }
