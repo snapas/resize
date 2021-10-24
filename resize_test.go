@@ -3,6 +3,7 @@ package resize
 import (
 	"image"
 	"image/color"
+	"reflect"
 	"runtime"
 	"testing"
 )
@@ -88,7 +89,7 @@ func Test_SameColorWithNRGBA(t *testing.T) {
 	out := Resize(10, 10, img, Lanczos3)
 	for y := out.Bounds().Min.Y; y < out.Bounds().Max.Y; y++ {
 		for x := out.Bounds().Min.X; x < out.Bounds().Max.X; x++ {
-			color := out.At(x, y).(color.RGBA)
+			color := out.At(x, y).(color.NRGBA)
 			if color.R != 0x80 || color.G != 0x80 || color.B != 0x80 || color.A != 0xFF {
 				t.Errorf("%+v", color)
 			}
@@ -124,7 +125,7 @@ func Test_SameColorWithNRGBA64(t *testing.T) {
 	out := Resize(10, 10, img, Lanczos3)
 	for y := out.Bounds().Min.Y; y < out.Bounds().Max.Y; y++ {
 		for x := out.Bounds().Min.X; x < out.Bounds().Max.X; x++ {
-			color := out.At(x, y).(color.RGBA64)
+			color := out.At(x, y).(color.NRGBA64)
 			if color.R != 0x8000 || color.G != 0x8000 || color.B != 0x8000 || color.A != 0xFFFF {
 				t.Errorf("%+v", color)
 			}
@@ -186,6 +187,25 @@ func Test_SameSizeReturnsOriginal(t *testing.T) {
 
 	if img != out {
 		t.Fail()
+	}
+}
+
+func Test_ResizesToSameType(t *testing.T) {
+	images := []image.Image{
+		image.NewRGBA(image.Rect(0, 0, 10, 10)),
+		image.NewRGBA64(image.Rect(0, 0, 10, 10)),
+		image.NewNRGBA(image.Rect(0, 0, 10, 10)),
+		image.NewNRGBA64(image.Rect(0, 0, 10, 10)),
+		image.NewGray(image.Rect(0, 0, 10, 10)),
+		image.NewGray16(image.Rect(0, 0, 10, 10)),
+		image.NewYCbCr(image.Rect(0, 0, 10, 10), image.YCbCrSubsampleRatio422),
+	}
+
+	for _, image := range images {
+		resized := Resize(20, 0, image, Lanczos2)
+		if !(reflect.TypeOf(resized) == reflect.TypeOf(image)) {
+			t.Fail()
+		}
 	}
 }
 
